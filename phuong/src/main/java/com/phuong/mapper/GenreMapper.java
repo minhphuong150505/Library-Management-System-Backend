@@ -2,12 +2,21 @@ package com.phuong.mapper;
 
 import com.phuong.modal.Genre;
 import com.phuong.payload.dto.GenreDTO;
+import com.phuong.reponsitory.GenreReponsitory;
+import com.phuong.services.GenreService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+@Component
+@RequiredArgsConstructor
 public class GenreMapper {
-    public static GenreDTO toDTO(Genre savedGenre){
-        if(savedGenre==null){
+
+    private final GenreReponsitory genreRepository;
+
+    public GenreDTO toDTO(Genre savedGenre) {
+        if (savedGenre == null) {
             return null;
         }
         GenreDTO dto = GenreDTO.builder()
@@ -26,10 +35,36 @@ public class GenreMapper {
             dto.setParentGenreName(savedGenre.getParentGenre().getName());
         }
 
-        dto.setSubGenres(savedGenre.getSubGenres().stream()
-                .filter(subGenres-> subGenres.getActive())
-                .map(subGenres -> toDTO(subGenres)).collect(Collectors.toList()));
+        if (savedGenre.getSubGenres() != null && !savedGenre.getSubGenres().isEmpty()) {
+            dto.setSubGenres(savedGenre.getSubGenres().stream()
+                    .filter(subGenres -> subGenres.getActive())
+                    .map(subGenres -> toDTO(subGenres)).collect(Collectors.toList()));
+        }
 //        dto.setBookCount((long) (savedGenre.getBook()) );
-      return dto;
+        return dto;
+    }
+
+    public Genre toEntity(GenreDTO genreDTO) {
+        if (genreDTO == null) {
+            return null;
+        }
+
+        Genre genre = Genre.builder()
+                .id(genreDTO.getId())
+                .code(genreDTO.getCode())
+                .name(genreDTO.getName())
+                .description(genreDTO.getDescription())
+                .displayOrder(genreDTO.getDisplayOrder())
+                .active(genreDTO.getActive())
+                .build();
+        ;
+
+        if (genreDTO.getParentGenreId() != null) {
+            genreRepository.findById(genreDTO.getParentGenreId())
+                    .ifPresent(genre::setParentGenre);
+
+        }
+
+        return null;
     }
 }
