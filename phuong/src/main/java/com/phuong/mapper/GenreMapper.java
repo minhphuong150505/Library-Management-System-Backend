@@ -2,18 +2,19 @@ package com.phuong.mapper;
 
 import com.phuong.modal.Genre;
 import com.phuong.payload.dto.GenreDTO;
-import com.phuong.reponsitory.GenreReponsitory;
+import com.phuong.repository.GenreRepository;
 import com.phuong.services.GenreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class GenreMapper {
 
-    private final GenreReponsitory genreRepository;
+    private final GenreRepository genreRepository;
 
     public GenreDTO toDTO(Genre savedGenre) {
         if (savedGenre == null) {
@@ -65,6 +66,28 @@ public class GenreMapper {
 
         }
 
-        return null;
+        return genre;
+    }
+
+    public void updateEntityFromDTO(GenreDTO dto, Genre existingGenre) {
+        if (dto == null || existingGenre == null) {
+            return;
+        }
+
+        existingGenre.setCode(dto.getCode());
+        existingGenre.setName(dto.getName());
+        existingGenre.setDescription(dto.getDescription());
+        existingGenre.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
+        if (dto.getActive() != null) {
+            existingGenre.setActive(dto.getActive());
+        }
+        if (dto.getParentGenreId() != null) {
+            genreRepository.findById(dto.getParentGenreId())
+                    .ifPresent(existingGenre::setParentGenre);
+        }
+    }
+
+    public List<GenreDTO> toDTOList(List<Genre> genreList) {
+        return genreList.stream()
     }
 }

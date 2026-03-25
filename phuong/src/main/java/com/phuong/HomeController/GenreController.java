@@ -20,10 +20,10 @@ public class GenreController {
         GenreDTO createdGenre = genreService.createGenre(genreDTO);
         return ResponseEntity.ok(createdGenre);
     }
-
-    @GetMapping("/create")
-    public ResponseEntity<GenreDTO> getAllGenres(@RequestBody GenreDTO genreDTO) {
-        List<GenreDTO> genres = genreService.getAllGenres();
-        return ResponseEntity.ok(genres);
-    }
+//
+//    @GetMapping("/create")
+//    public ResponseEntity<GenreDTO> getAllGenres(@RequestBody GenreDTO genreDTO) {
+//        List<GenreDTO> genres = genreService.getAllGenres();
+//        return ResponseEntity.ok(genres);
+//    }
 }
