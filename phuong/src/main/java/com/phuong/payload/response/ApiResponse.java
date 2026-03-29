@@ -1,4 +1,4 @@
-package com.phuong.response;
+package com.phuong.payload.response;
 
 
 import lombok.AllArgsConstructor;

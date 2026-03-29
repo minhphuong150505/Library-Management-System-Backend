@@ -88,6 +88,7 @@ public class GenreMapper {
     }
 
     public List<GenreDTO> toDTOList(List<Genre> genreList) {
-        return genreList.stream()
+
+        return genreList.stream().map(genre -> toDTO(genre)).collect(Collectors.toList());
     }
 }

@@ -1,8 +1,6 @@
 package com.phuong.exception;
 
-import com.phuong.modal.Genre;
-import com.phuong.response.ApiResponse;
-import org.apache.coyote.Response;
+import com.phuong.payload.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

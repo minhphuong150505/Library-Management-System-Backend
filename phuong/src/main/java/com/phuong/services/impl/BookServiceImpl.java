@@ -1,0 +1,136 @@
+package com.phuong.services.impl;
+
+import com.phuong.exception.BookException;
+import com.phuong.mapper.BookMapper;
+import com.phuong.modal.Book;
+import com.phuong.payload.dto.BookDTO;
+import com.phuong.payload.request.BookSearchRequest;
+import com.phuong.payload.response.PageResponse;
+import com.phuong.repository.BookRepository;
+import com.phuong.services.BookService;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.awt.print.Pageable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class BookServiceImpl implements BookService {
+
+    private final BookRepository bookRepository;
+    private final BookMapper bookMapper;
+
+    @Override
+    public BookDTO createBook(BookDTO bookDTO) throws BookException {
+
+        if(bookRepository.existsByIsbn(bookDTO.getIsbn())) {
+            throw new BookException("Book with isbn " +
+                    bookDTO.getIsbn() + " already exists");
+        }
+
+        Book book = bookMapper.toEntity(bookDTO);
+
+        book.isAvailableCopiesValid();
+        Book savedBook = bookRepository.save(book);
+
+        return bookMapper.toDTO(savedBook);
+
+    }
+
+    @Override
+    public List<BookDTO> createBooksBulk(List<BookDTO> bookDTOs) throws BookException {
+
+        List<BookDTO> createdBook = new ArrayList<>();
+        for(BookDTO bookDTO : bookDTOs){
+            BookDTO book = createBook(bookDTO);
+            createdBook.add(book);
+        }
+        return createdBook;
+    }
+
+    @Override
+    public BookDTO getBookById(Long bookId) throws BookException {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookException("Book not found"));
+        return  bookMapper.toDTO(book);
+    }
+
+    @Override
+    public BookDTO getBookByISBN(String isbn) throws BookException {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new BookException("Book not found!"));
+        return  bookMapper.toDTO(book);
+    }
+
+    @Override
+    public BookDTO updateBook(Long bookId, BookDTO bookDTO) throws BookException {
+        Book existingBook = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookException("Book not found with id: " + bookId));
+
+        bookMapper.updateEntityFromDTO(bookDTO, existingBook);
+        existingBook.isAvailableCopiesValid();
+        Book book =  bookRepository.save(existingBook);
+        return bookMapper.toDTO(book);
+    }
+
+    @Override
+    public void deleteBook(Long bookId) throws BookException {
+        Book existingBook = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookException("Book not found with id: " + bookId));
+        existingBook.setActive(false);
+        bookRepository.save(existingBook);
+    }
+
+    @Override
+    public void hardDeleteBook(Long bookId) throws BookException {
+        Book existingBook = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookException("Book not found with id: " + bookId));
+        bookRepository.delete(existingBook);
+    }
+
+    @Override
+    public List<BookDTO> getBooksByAuthor(String author) throws BookException {
+        List<Book> book = bookRepository.getAllByAuthor(author).stream().toList();
+
+        return book.stream().filter(b -> b.getActive())
+                .map(bookMapper ::toDTO).collect(Collectors.toList());
+    }
+
+//    @Override
+//    public PageResponse<BookDTO> searchBooksWithFilters(
+//            BookSearchRequest searchRequest) {
+//        Pageable pageable =
+//        Pageable bookPage = bookRepository.searchBookWithFilters(
+//                searchRequest.getSearchTerm(),
+//                searchRequest.getGenreId(),
+//                searchRequest.getAvailableOnly()
+//                searchRequest.
+//        )
+//        return null;
+//    }
+
+    @Override
+    public Long getTotalActiveBooks() {
+        return 0L;
+    }
+
+    @Override
+    public Long getTotalAvailableBooks() {
+        return 0L;
+    }
+
+    private Pageable createPageble(int page, int size, String sortBy, String sortDirection) {
+        size = Math.min(size, 10);
+        size = Math.max(size, 1 );
+
+        Sort sort = sortDirection.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending() :  Sort.by(sortBy).descending();
+        return (Pageable) PageRequest.of(page, size, sort);
+    }
+}
