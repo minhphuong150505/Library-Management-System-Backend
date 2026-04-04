@@ -14,7 +14,7 @@ public class BookSearchRequest {
     private Boolean availableOnly;
     private Integer page = 0;
     private Integer size = 20;
-    private String sort = "createAt";
+    private String sortBy = "createAt";
     private String sortDirection = "DESC";
 
 }

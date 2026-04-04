@@ -10,6 +10,7 @@ import com.phuong.repository.BookRepository;
 import com.phuong.services.BookService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -102,27 +103,32 @@ public class BookServiceImpl implements BookService {
                 .map(bookMapper ::toDTO).collect(Collectors.toList());
     }
 
-//    @Override
-//    public PageResponse<BookDTO> searchBooksWithFilters(
-//            BookSearchRequest searchRequest) {
-//        Pageable pageable =
-//        Pageable bookPage = bookRepository.searchBookWithFilters(
-//                searchRequest.getSearchTerm(),
-//                searchRequest.getGenreId(),
-//                searchRequest.getAvailableOnly()
-//                searchRequest.
-//        )
-//        return null;
-//    }
+    @Override
+    public PageResponse<BookDTO> searchBooksWithFilters(
+            BookSearchRequest searchRequest) {
+        Pageable pageable = createPageble(searchRequest.getPage(),
+                searchRequest.getSize(),
+                searchRequest.getSortBy(),
+                searchRequest.getSortDirection());
+        Page<Book> bookPage = bookRepository.searchBookWithFilters(
+                searchRequest.getSearchTerm(),
+                searchRequest.getGenreId(),
+                searchRequest.getAvailableOnly(),
+                pageable
+        );
+        return convertToPageResponse(bookPage);
+    }
 
     @Override
     public Long getTotalActiveBooks() {
-        return 0L;
+
+        return bookRepository.countByActiveTrue();
     }
 
     @Override
     public Long getTotalAvailableBooks() {
-        return 0L;
+
+        return bookRepository.countAvailableBooks();
     }
 
     private Pageable createPageble(int page, int size, String sortBy, String sortDirection) {
@@ -132,5 +138,23 @@ public class BookServiceImpl implements BookService {
         Sort sort = sortDirection.equalsIgnoreCase("ASC")
                 ? Sort.by(sortBy).ascending() :  Sort.by(sortBy).descending();
         return (Pageable) PageRequest.of(page, size, sort);
+    }
+
+    private PageResponse<BookDTO> convertToPageResponse(Page<Book> books) {
+        List<BookDTO> bookDTOs = books.getContent()
+                .stream()
+                .map(bookMapper::toDTO)
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(
+                bookDTOs,
+                books.getNumber(),
+                books.getSize(),
+                books.getTotalElements(),
+                books.getTotalPages(),
+                books.isLast(),
+                books.isFirst(),
+                books.isEmpty()
+        );
     }
 }
