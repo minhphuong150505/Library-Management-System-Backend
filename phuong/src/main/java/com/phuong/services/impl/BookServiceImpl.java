@@ -14,8 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
-import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -106,14 +106,15 @@ public class BookServiceImpl implements BookService {
     @Override
     public PageResponse<BookDTO> searchBooksWithFilters(
             BookSearchRequest searchRequest) {
-        Pageable pageable = createPageble(searchRequest.getPage(),
+        Pageable pageable = createPageble(
+                searchRequest.getPage(),
                 searchRequest.getSize(),
                 searchRequest.getSortBy(),
                 searchRequest.getSortDirection());
         Page<Book> bookPage = bookRepository.searchBookWithFilters(
                 searchRequest.getSearchTerm(),
                 searchRequest.getGenreId(),
-                searchRequest.getAvailableOnly(),
+                searchRequest.getAvailableOnly() != null ? searchRequest.getAvailableOnly() : false,
                 pageable
         );
         return convertToPageResponse(bookPage);
